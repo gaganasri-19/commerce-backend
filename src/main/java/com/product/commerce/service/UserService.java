@@ -1,6 +1,7 @@
 package com.product.commerce.service;
 
 import com.product.commerce.entity.User;
+import com.product.commerce.exception.ResourceAlreadyExistsException;
 import com.product.commerce.dto.UserRegisterRequest;
 import com.product.commerce.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,7 +19,7 @@ public class UserService {
 
     public void register(UserRegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new ResourceAlreadyExistsException("Email already exists");
         }
 
         String hashedPassword = passwordEncoder.encode(request.getPassword());
