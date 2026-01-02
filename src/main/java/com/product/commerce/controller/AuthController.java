@@ -24,8 +24,7 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken( //this calls UserDetailsServiceImpl.loadUserByUsername which we have overridden in CustomUserDetailsService
                         request.getEmail(),
                         request.getPassword()
                 )
