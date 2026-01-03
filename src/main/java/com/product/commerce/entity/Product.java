@@ -71,4 +71,19 @@ public class Product {
     public void setStatus(ProductStatus status) {
         this.status = status;
     }
+
+    public void reduceStock(int quantity) {
+    if (this.stock < quantity) {
+        throw new IllegalStateException("Stock cannot go negative");
+    }
+    this.stock -= quantity;
+    }
+
+    public void increaseStock(int quantity) {
+    if (quantity < 0) {
+        throw new IllegalArgumentException("Quantity must be positive");
+    }
+    this.stock += quantity;
+}
+
 }
