@@ -6,6 +6,8 @@ import com.product.commerce.service.OrderService;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,11 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @GetMapping
+    public List<Order> getUserOrders(@AuthenticationPrincipal UserDetails user) {
+        return orderService.getUserOrders(user.getUsername());
+    }
+
     @PostMapping
     public Order placeOrder(@AuthenticationPrincipal UserDetails user,
                             @Valid @RequestBody CreateOrderRequest request) {
@@ -30,4 +37,10 @@ public class OrderController {
                 request.getQuantity()
         );
     }
+
+    @DeleteMapping("/{orderId}")
+    public void cancelOrder(@PathVariable Long orderId, @AuthenticationPrincipal UserDetails user) {
+    orderService.cancelOrder(orderId, user.getUsername());
+    }
+
 }

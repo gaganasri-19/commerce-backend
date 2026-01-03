@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.product.commerce.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email); //helps avoid null pointer exceptions
+    Optional<User> findByEmail(String email); 
 }

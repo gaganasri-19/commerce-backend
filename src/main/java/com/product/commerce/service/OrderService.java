@@ -2,6 +2,9 @@ package com.product.commerce.service;
 
 import com.product.commerce.entity.*;
 import com.product.commerce.repository.*;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +21,12 @@ public class OrderService {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+    }
+
+    public List<Order> getUserOrders(String username) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return orderRepository.findByUser(user);
     }
 
     @Transactional
@@ -89,8 +98,5 @@ public class OrderService {
     product.increaseStock(order.getQuantity());
 
     order.markCancel(); // sets status = CANCELLED
-}
-
-
-
+    }
 }
