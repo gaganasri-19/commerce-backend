@@ -1,8 +1,11 @@
 package com.product.commerce.service;
 
 import com.product.commerce.entity.*;
+import com.product.commerce.event.OrderCreatedEvent;
+import com.product.commerce.event.OrderEventPublisher;
 import com.product.commerce.repository.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -14,13 +17,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final OrderEventPublisher orderEventPublisher;
 
     public OrderService(OrderRepository orderRepository,
                         ProductRepository productRepository,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     public List<Order> getUserOrders(String username) {
@@ -45,7 +51,19 @@ public class OrderService {
         User user = userRepository.findByEmail(userEmail)
             .orElseThrow(() -> new RuntimeException("User not found"));
         Order order = new Order(user, product, quantity);
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        Double amount = product.getPrice() * quantity;
+
+        orderEventPublisher.publishOrderCreated(
+            new OrderCreatedEvent(
+                    savedOrder.getId(),
+                    user.getEmail(),
+                    amount
+            )
+    );
+
+    return savedOrder;
+
     }
 
     @Transactional
@@ -99,4 +117,5 @@ public class OrderService {
 
     order.markCancel(); // sets status = CANCELLED
     }
+
 }

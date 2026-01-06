@@ -20,6 +20,9 @@ spring:
     init:
       mode: never
 
+  kafka:
+    bootstrap-servers: localhost:9092
+  
 jwt:
   secret: your-long-secret-strong-key-characters
   expiration: 3600000 # 1 hour in ms

@@ -3,6 +3,8 @@ package com.product.commerce.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -22,6 +24,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "UTC")
     private Instant createdAt;
 
     protected Order() {}
