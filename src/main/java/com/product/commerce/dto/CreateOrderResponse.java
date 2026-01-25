@@ -3,8 +3,6 @@ package com.product.commerce.dto;
 import java.time.Instant;
 import java.util.List;
 
-import org.aspectj.weaver.ast.Or;
-
 import com.product.commerce.entity.OrderItem;
 import com.product.commerce.entity.OrderStatus;
 
