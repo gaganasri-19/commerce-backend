@@ -1,5 +1,6 @@
 package com.product.commerce.service;
 
+import com.product.commerce.cache.CacheKeys;
 import com.product.commerce.dto.CreateOrderRequest;
 import com.product.commerce.dto.CreateOrderResponse;
 import com.product.commerce.entity.*;
@@ -9,6 +10,7 @@ import com.product.commerce.repository.*;
 
 import java.util.List;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,15 +21,18 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public OrderService(OrderRepository orderRepository,
                         ProductRepository productRepository,
                         UserRepository userRepository,
-                        OrderEventPublisher orderEventPublisher) {
+                        OrderEventPublisher orderEventPublisher,
+                        RedisTemplate<String, Object> redisTemplate) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.orderEventPublisher = orderEventPublisher;
+        this.redisTemplate = redisTemplate;
     }
 
     public List<Order> getUserOrders(String username) {
@@ -104,8 +109,9 @@ public class OrderService {
         Product product = orderItem.getProduct();
         product.increaseStock(orderItem.getQuantity());
         productRepository.save(product);
+        redisTemplate.delete(CacheKeys.PRODUCT + product.getId());
     });
-
+    redisTemplate.delete(CacheKeys.PRODUCT_LIST);
     order.setStatus(OrderStatus.CANCELLED); //saved to db automatically due to transactional context
 
     }
