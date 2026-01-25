@@ -1,6 +1,7 @@
 package com.product.commerce.controller;
 
 import com.product.commerce.dto.CreateOrderRequest;
+import com.product.commerce.dto.CreateOrderResponse;
 import com.product.commerce.entity.Order;
 import com.product.commerce.service.OrderService;
 
@@ -28,19 +29,17 @@ public class OrderController {
     }
 
     @PostMapping
-    public Order placeOrder(@AuthenticationPrincipal UserDetails user,
+    public CreateOrderResponse placeOrder(@AuthenticationPrincipal UserDetails user,
                             @Valid @RequestBody CreateOrderRequest request) {
 
         return orderService.createOrder(
-                user.getUsername(), // email
-                request.getProductId(),
-                request.getQuantity()
+                user.getUsername(), request
         );
     }
 
     @DeleteMapping("/{orderId}")
-    public void cancelOrder(@PathVariable Long orderId, @AuthenticationPrincipal UserDetails user) {
-    orderService.cancelOrder(orderId, user.getUsername());
+    public void cancelOrder(@PathVariable Long orderId) {
+        orderService.cancelOrder(orderId);
     }
 
 }

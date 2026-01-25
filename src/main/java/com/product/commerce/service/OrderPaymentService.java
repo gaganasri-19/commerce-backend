@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderPaymentService {
 
     private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
 
-    public OrderPaymentService(OrderRepository orderRepository) {
+    public OrderPaymentService(OrderRepository orderRepository, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
  }
 
     @Transactional
@@ -28,8 +30,11 @@ public class OrderPaymentService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        Product product = order.getProduct();
-        product.increaseStock(order.getQuantity());
+        order.getItems().forEach(orderItem -> {
+             Product product = orderItem.getProduct();
+            product.increaseStock(orderItem.getQuantity());
+            productRepository.save(product);
+        });
 
         order.markCancel();
         orderRepository.save(order);

@@ -1,5 +1,7 @@
 package com.product.commerce.service;
 
+import com.product.commerce.dto.CreateOrderRequest;
+import com.product.commerce.dto.CreateOrderResponse;
 import com.product.commerce.entity.*;
 import com.product.commerce.event.OrderCreatedEvent;
 import com.product.commerce.event.OrderEventPublisher;
@@ -35,35 +37,47 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(String userEmail, Long productId, int quantity) {
+    public CreateOrderResponse createOrder(String userEmail, CreateOrderRequest request) {
+    User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Product product = productRepository.findByIdForUpdate(productId)
+    Order order = new Order(user);
+
+    for (CreateOrderRequest.OrderItemRequest itemReq : request.getItems()) {
+        System.out.println("Quantity: " + itemReq.getQuantity());
+
+        Product product = productRepository.findByIdForUpdate(itemReq.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (product.getStock() < quantity) {
-            throw new RuntimeException("Insufficient stock");
+        if (product.getStock() < itemReq.getQuantity()) {
+            throw new RuntimeException("Insufficient stock for product " + product.getName());
         }
+        
+        product.reduceStock(itemReq.getQuantity());
 
-        // Reduce stock FIRST
-        product.reduceStock(quantity); //no need to save explicitly due to transactional context
+        OrderItem item = new OrderItem(
+                order,
+                product,
+                itemReq.getQuantity(),
+                product.getPrice()
+        );
 
-        User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        Order order = new Order(user, product, quantity);
-        Order savedOrder = orderRepository.save(order);
-        Double amount = product.getPrice() * quantity;
-
-        orderEventPublisher.publishOrderCreated(
-            new OrderCreatedEvent(
-                    savedOrder.getId(),
-                    user.getEmail(),
-                    amount
-            )
-    );
-
-    return savedOrder;
-
+        order.addItem(item);
     }
+    Order savedOrder = orderRepository.save(order);
+    order.setSubtotal();
+    order.setUser(user);
+
+    orderEventPublisher.publishOrderCreated(
+        new OrderCreatedEvent(
+            savedOrder.getId(), 
+            user.getEmail(),
+            savedOrder.getSubtotal()));
+
+    return new CreateOrderResponse(savedOrder.getId(), 
+    user.getEmail(), savedOrder.getItems(), savedOrder.getSubtotal(), 
+    savedOrder.getStatus(), savedOrder.getCreatedAt());
+}
 
     @Transactional
     public void markOrderPaid(Long orderId) {
@@ -86,34 +100,14 @@ public class OrderService {
         throw new RuntimeException("Only CREATED orders can be cancelled");
     }
 
-    Product product = order.getProduct();
-    product.setStock(product.getStock() + order.getQuantity());
+    order.getItems().forEach(orderItem -> {
+        Product product = orderItem.getProduct();
+        product.increaseStock(orderItem.getQuantity());
+        productRepository.save(product);
+    });
 
-    order.setStatus(OrderStatus.CANCELLED);
+    order.setStatus(OrderStatus.CANCELLED); //saved to db automatically due to transactional context
 
-    productRepository.save(product);
-    orderRepository.save(order);
-    }
-
-    @Transactional
-    public void cancelOrder(Long orderId, String email) {
-
-    Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new RuntimeException("Order not found"));
-
-    if (!order.getUser().getEmail().equals(email)) {
-        throw new RuntimeException("Not allowed");
-    }
-
-    if (order.getStatus() != OrderStatus.CREATED) {
-        throw new RuntimeException("Order cannot be cancelled");
-    }
-
-    // Restore stock
-    Product product = order.getProduct();
-    product.increaseStock(order.getQuantity());
-
-    order.markCancel(); // sets status = CANCELLED
     }
 
 }

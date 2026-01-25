@@ -2,6 +2,8 @@ package com.product.commerce.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -16,10 +18,10 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Product product;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> items = new ArrayList<>();
 
-    private int quantity;
+    private double subtotal;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -27,12 +29,10 @@ public class Order {
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "UTC")
     private Instant createdAt;
 
-    protected Order() {}
-
-    public Order(User user, Product product, int quantity) {
+    public Order() {}
+    
+    public Order(User user) {
         this.user = user;
-        this.product = product;
-        this.quantity = quantity;
         this.status = OrderStatus.CREATED;
         this.createdAt = Instant.now();
     }
@@ -45,12 +45,8 @@ public class Order {
         return user;
     }
 
-    public Product getProduct() {
-        return product;
-    }
-
-    public int getQuantity() {
-        return quantity;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public OrderStatus getStatus() {
@@ -61,9 +57,23 @@ public class Order {
         return createdAt;
     }
 
+    public double getSubtotal() {   
+        return subtotal;
+    }                       
+
+    public double setSubtotal() {
+         if (items == null || items.isEmpty()) {
+        return 0.0; // Return 0 if there are no items
+    }
+        return  this.subtotal = items.stream()
+            .mapToDouble(i -> i.getPriceAtPurchase() * i.getQuantity())
+            .sum();
+    }
+
     public void setStatus(OrderStatus status) {
         this.status = status;
     }
+    
     public void markPaid() {
     if (this.status != OrderStatus.CREATED) {
         throw new IllegalStateException("Invalid state transition");
@@ -77,4 +87,13 @@ public class Order {
     }
         this.status = OrderStatus.CANCELLED;
     }
+
+    public void addItem(OrderItem item) {
+    items.add(item);
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+   }
+
 }
