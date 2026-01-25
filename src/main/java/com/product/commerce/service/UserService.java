@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-    private final UserRepository userRepository; // Dependency injection
+    private final UserRepository userRepository; 
     private final BCryptPasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) { // Constructor injection

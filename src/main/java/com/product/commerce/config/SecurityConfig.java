@@ -23,7 +23,7 @@ public class SecurityConfig {
         http.addFilterBefore(jwtAuthenticationFilter,  UsernamePasswordAuthenticationFilter.class)
             .csrf(csrf -> csrf.disable()) //Disabling CSRF for stateless APIs
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/health",
+                .requestMatchers("/actuator/health",
                                  "/api/users/register",
                                  "/api/auth/login",
                                  "/api/products/**")

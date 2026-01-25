@@ -5,7 +5,6 @@ import com.product.commerce.event.OrderCreatedEvent;
 import com.product.commerce.event.OrderEventPublisher;
 import com.product.commerce.repository.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -76,7 +75,6 @@ public class OrderService {
     }
 
     order.setStatus(OrderStatus.PAID);
-    orderRepository.save(order);
     }
 
     @Transactional

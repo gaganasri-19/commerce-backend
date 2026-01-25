@@ -1,7 +1,5 @@
 package com.product.commerce.event;
 
-import java.time.Instant;
-
 public class OrderCreatedEvent {
 
     private Long orderId;
